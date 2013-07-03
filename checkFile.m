@@ -6,7 +6,10 @@ function [ deviceID, comErrors, resets ] = checkFile( fileName )
 
 
 %% Find device ID
-
+fileName = regexprep(fileName,'day','ID','ignorecase');
+fileName = regexprep(fileName,'dime','ID','ignorecase');
+regexResult = regexpi(fileName,'ID(\d.)','tokens');
+deviceID = regexResult{1};
 
 %% Find communication errors
 comIdx = activity == 0 | activity > 2;
