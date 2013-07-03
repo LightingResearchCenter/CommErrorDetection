@@ -1,9 +1,16 @@
-function [ deviceID, comErrors, resets ] = checkFile( fileName )
+function [ deviceID, comErrors, resetErrors ] = checkFile( fileName )
 %CHECKFILE checks a Daysimeter file for communication errors and resets
 %   Returns the device ID and a summary of communication errors and resets
 
 %% Read file
-
+% Determine type of raw file
+rawType = rawTest(fileName);
+% Process file
+if rawType == 1
+    [time, activity, resets] = readFile1(fileName);
+else % rawType == 2
+    [time, activity, resets] = readFile2(fileName);
+end
 
 %% Find device ID
 fileName = regexprep(fileName,'day','ID','ignorecase');
