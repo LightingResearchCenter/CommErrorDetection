@@ -9,10 +9,15 @@ function [ deviceID, comErrors, resets ] = checkFile( fileName )
 
 
 %% Find communication errors
-
+comIdx = activity == 0 | activity > 2;
 
 %% Summarize communication errors
-
+countComErr = sum(comIdx);
+comIdxPlus1 = circshift(comIdx,1);
+startsIdx = comIdx == 1 & comIdxPlus1 == 0;
+endsIdx = comIdx == 0 & comIdxPlus1 == 1;
+startTimes = time(startsIdx);
+endTimes = time(endsIdx);
 
 %% Find resets
 
