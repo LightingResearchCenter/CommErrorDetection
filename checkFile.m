@@ -1,36 +1,47 @@
-function [ deviceID, comErrors, resetErrors ] = checkFile( fileName )
+function [ deviceID, comErrors, resetErrors ] = checkFile( filePath )
 %CHECKFILE checks a Daysimeter file for communication errors and resets
 %   Returns the device ID and a summary of communication errors and resets
 
 %% Read file
 % Determine type of raw file
-rawType = rawTest(fileName);
-% Process file
-if rawType == 1
-    [time, activity, resets] = readFile1(fileName);
-else % rawType == 2
-    [time, activity, resets] = readFile2(fileName);
+rawType = rawTest(filePath);
+% Process raw file based on type
+if rawType == 1 % bitwise text file
+    [deviceID, time, activity, resets] = readRawChar(filePath);
+elseif rawType == 2 % uint16 binary with separate header file
+    [deviceID, time, activity, resets] = readRawUint16(filePath);
+else
+    deviceID = 'Invalid file';
+    comErrors = 'Invalid file';
+    resetErrors = 'Invalid file';
+    return;
 end
 
-%% Find device ID
-fileName = regexprep(fileName,'day','ID','ignorecase');
-fileName = regexprep(fileName,'dime','ID','ignorecase');
-regexResult = regexpi(fileName,'ID(\d.)','tokens');
-deviceID = regexResult{1};
-
-%% Find communication errors
-comIdx = activity == 0 | activity > 2;
-
 %% Summarize communication errors
-countComErr = sum(comIdx);
+% Find communication errors
+comIdx = activity == 0 | activity > 2;
+% Find start and end times of error clusters
 comIdxPlus1 = circshift(comIdx,1);
 startsIdx = comIdx == 1 & comIdxPlus1 == 0;
 endsIdx = comIdx == 0 & comIdxPlus1 == 1;
 startTimes = time(startsIdx);
 endTimes = time(endsIdx);
-
-%% Find resets
-
+% Find the number of error clusters
+nComErr = min([length(startTimes),length(endTimes)]);
+% Create string summary to return
+dateFormat = 'mm/dd/yy HH:MM:SS';
+comErrors0 = [num2str(nComErr),' Communication Errors at approx. '];
+l1 = length(comErrors0);
+l2 = length([' ',dateFormat,' - ',dateFormat]);
+% Preallocate the string
+comErrors = char(zeros(l1+l2*nComErr,1));
+comErrors(1:l1) = comErrors0;
+for i1 = 1:nComErr
+    j1 = l1 + 1 + l2 * (i1 - 1);
+    j2 = j1 + l2 - 1;
+    comErrors(j1:j2) = [' ',datestr(startTimes(i1),dateFormat),' - ',...
+        datestr(endTimes(i1),dateFormat)];
+end
 
 %% Summarize resets
 
