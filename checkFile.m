@@ -57,7 +57,7 @@ else
     resetTimes = time(resets);
     resetErrors0 = [num2str(nResetErr),' reset errors at approx. '];
     l3 = length(resetErrors0);
-    l4 = length([', 'dateFormat]);
+    l4 = length([', ',dateFormat]);
     % Preallocate the string
     resetErrors = char(zeros(l3+l4*nResetErr,1));
     resetErrors(1:l3) = resetErrors0;

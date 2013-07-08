@@ -2,7 +2,7 @@ function [deviceID, time, activity, resets] = readRawUint16(dataPath)
 % READRAWUINT16 processes Daysimeter files that have been downloaded directly
 
 [dataDir, dataName, dataExt] = fileparts;
-infoPath = fullfile(dataDir, [dataName,'_header',dataExt]);
+infoPath = fullfile(dataDir, [dataName,'_log_info',dataExt]);
 
 % read the header file
 fid = fopen(infoPath,'r','b');
@@ -38,7 +38,7 @@ A(unwritten) = [];
 
 % consolidate resets and remove extra (value = 65278)
 resets0 = R == 65278;
-resets = circshift(resets0(:));
+resets = circshift(resets0(:),-1);
 A(resets0) = [];
 resets(resets0) = [];
 
