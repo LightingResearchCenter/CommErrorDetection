@@ -7,24 +7,39 @@ function [ deviceID, comErrors, resetErrors ] = checkFile( filePath )
 rawType = rawTest(filePath);
 % Process raw file based on type
 if rawType == 1 % bitwise text file
-    [deviceID, time, activity, resets] = readRawAsciiByte(filePath);
+    try
+        [deviceID, time, activity, resets] = readRawAsciiByte(filePath);
+    catch err
+        deviceID = 'File skipped';
+        comErrors = '';
+        resetErrors = '';
+        return;
+    end
 elseif rawType == 2 % uint16 binary with separate header file
-    [deviceID, time, activity, resets] = readRawUint16(filePath);
+    try
+        [deviceID, time, activity, resets] = readRawUint16(filePath);
+    catch err
+        deviceID = 'File skipped';
+        comErrors = '';
+        resetErrors = '';
+        return;
+    end
 else
     deviceID = 'Invalid file';
-    comErrors = 'Invalid file';
-    resetErrors = 'Invalid file';
+    comErrors = '';
+    resetErrors = '';
     return;
 end
 
 %% Set date formatting
-dateFormat = 'mm/dd/yy HH:MM:SS';
+dateFormat = 'mm/dd/yy HH:MM';
 
 %% Summarize communication errors
 % Find communication errors
-comIdx = activity == 0 | activity > 2;
+comIdx = activity == 0; % | activity > 4;
+comIdx = comIdx(:);
 if max(comIdx) == 0
-    comErrors = 'none';
+    comErrors = 'No com. errors detected';
 else
     % Find start and end times of error clusters
     comIdxPlus1 = circshift(comIdx,1);
@@ -50,8 +65,9 @@ else
 end
 
 %% Summarize resets
+resets = resets(:);
 if max(resets) == 0
-    resetErrors = 'none';
+    resetErrors = 'No resets detected';
 else
     nResetErr = sum(resets);
     resetTimes = time(resets);
@@ -61,6 +77,12 @@ else
     % Preallocate the string
     resetErrors = char(zeros(l3+l4*nResetErr,1));
     resetErrors(1:l3) = resetErrors0;
+    for i2 = 1:nResetErr
+        j3 = l3 + 1 + l4 * (i1 - 1);
+        j4 = j3 + l4 - 1;
+        resetErrors(j3:j4) = [', ',datestr(resetTimes(i1),dateFormat)];
+    end
+end
 
 
 end
