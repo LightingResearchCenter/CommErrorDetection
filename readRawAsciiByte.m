@@ -3,27 +3,41 @@ function [deviceID, time, activity, resets] = readRawAsciiByte(dataPath)
 % ASCII byte format
 
 % read the file
-fid = fopen(dataPath,'r','b');
-raw = fread(fid,'uchar');
+fid = fopen(dataPath);
+scan = textscan(fid, '%f');
+raw = scan{1};
 fclose(fid);
+header = raw(1:1024);
+data = raw(1025:end);
 
 %organize data in to rgba
-n = floor(length(raw)/8 - 2);
-time = -1*ones(n,1);
-A = -1*ones(n,1);
-for i = 24:8:length(raw) % the first 16 bytes are the header if one exists
-    time(i/8 - 2) = datenum(start) + (int/86400)*(i/8 - 3);
-    A(i/8 - 2) = 256*raw(i - 1) + raw(i);
-    A(i/8 - 2) = A(i/8 - 2)/2;
+deviceID = num2str((header(4) - 48)*1000 + (header(5) - 48)*100 + (header(6) - 48)*10 + (header(7) - 48));
+month = (header(10) - 48)*10 + (header(11) - 48);
+day = (header(13) - 48)*10 + (header(14) - 48);
+year = (header(16) - 48)*10 + (header(17) - 48);
+hour = (header(19) - 48)*10 + (header(20) - 48);
+minute = (header(22) - 48)*10 + (header(23) - 48);
+period = (header(26) - 48)*100 + (header(27) - 48)*10 + (header(28) - 48);
+startTime = datenum(year,month,day,hour,minute,0);
+j = 1;
+for i = 1:8:length(data)
+    time(j) = startTime + (period/86400)*(i/8 - 3);
+    A(j) = (256*data(i + 6) + data(i + 7));
+    R(j) = 256*data(j) + data(j + 1);
+    G(j) = 256*data(j + 2) + data(j + 3);
+    B(j) = 256*data(j + 4) + data(j + 5);
+    j = j + 1;
 end
 
+
+
 % remove unwritten (value = 65535)
-unwritten = A == 65535;
+unwritten = R == 65535;
 A(unwritten) = [];
 
 % consolidate resets and remove extra (value = 65278)
-resets0 = A == 65278;
-resets = circshift(resets0(:));
+resets0 = R == 65278;
+resets = circshift(resets0(:),-1);
 A(resets0) = [];
 resets(resets0) = [];
 
@@ -32,6 +46,6 @@ resets(resets0) = [];
 % from four right shifts in the source code
 activity = (sqrt(A))*.0039*4;
 
-activity = filter5min(activity,logInterval);
+activity = filter5min(activity,period);
 
 end

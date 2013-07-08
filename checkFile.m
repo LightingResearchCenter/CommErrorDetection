@@ -54,7 +54,7 @@ else
     l1 = length(comErrors0);
     l2 = length([', ',dateFormat,' - ',dateFormat]);
     % Preallocate the string
-    comErrors = char(zeros(l1+l2*nComErr,1));
+    comErrors = char(zeros(1,l1+l2*nComErr));
     comErrors(1:l1) = comErrors0;
     for i1 = 1:nComErr
         j1 = l1 + 1 + l2 * (i1 - 1);
@@ -75,7 +75,7 @@ else
     l3 = length(resetErrors0);
     l4 = length([', ',dateFormat]);
     % Preallocate the string
-    resetErrors = char(zeros(l3+l4*nResetErr,1));
+    resetErrors = char(zeros(1,l3+l4*nResetErr));
     resetErrors(1:l3) = resetErrors0;
     for i2 = 1:nResetErr
         j3 = l3 + 1 + l4 * (i1 - 1);
