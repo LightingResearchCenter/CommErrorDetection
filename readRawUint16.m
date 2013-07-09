@@ -16,7 +16,7 @@ fclose(fid);
 % find the ID number
 q = find(I==10,4,'first');
 deviceID = char(I(q(1)+1:q(1)+4))';
-% IDnum = str2double(deviceID);
+IDnum = str2double(deviceID);
 
 % find the start date time
 startDateTimeStr = char(I(q(2)+1:q(2)+14))';
@@ -26,18 +26,26 @@ startTime = datenum(startDateTimeStr,'mm-dd-yy HH:MM');
 logInterval = str2double(char(I(q(3)+1:q(3)+5))');
 
 % seperate data into raw R,G,B,A
+R = zeros(1,floor(length(D)/4));
+G = zeros(1,floor(length(D)/4));
+B = zeros(1,floor(length(D)/4));
 A = zeros(1,floor(length(D)/4));
 for i1 = 1:floor(length(D)/4)
+    R(i1) = D((i1-1)*4+1);
+    G(i1) = D((i1-1)*4+2);
+    B(i1) = D((i1-1)*4+3);
     A(i1) = D((i1-1)*4+4);
 end
 
 % remove unwritten (value = 65535)
-unwritten = A == 65535;
+unwritten = R == 65535;
+R(unwritten) = [];
 A(unwritten) = [];
 
 % consolidate resets and remove extra (value = 65278)
-resets0 = A == 65278;
+resets0 = R == 65278;
 resets = circshift(resets0(:),-1);
+R(resets0) = [];
 A(resets0) = [];
 resets(resets0) = [];
 

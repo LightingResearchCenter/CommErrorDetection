@@ -11,8 +11,8 @@ if rawType == 1 % bitwise text file
         [deviceID, time, activity, resets] = readRawAsciiByte(filePath);
     catch err
         deviceID = 'File skipped';
-        comErrors = '';
-        resetErrors = '';
+        comErrors = {''};
+        resetErrors = {''};
         return;
     end
 elseif rawType == 2 % uint16 binary with separate header file
@@ -20,14 +20,14 @@ elseif rawType == 2 % uint16 binary with separate header file
         [deviceID, time, activity, resets] = readRawUint16(filePath);
     catch err
         deviceID = 'File skipped';
-        comErrors = '';
-        resetErrors = '';
+        comErrors = {''};
+        resetErrors = {''};
         return;
     end
 else
     deviceID = 'Invalid file';
-    comErrors = '';
-    resetErrors = '';
+    comErrors = {''};
+    resetErrors = {''};
     return;
 end
 
@@ -39,7 +39,7 @@ dateFormat = 'mm/dd/yy HH:MM';
 comIdx = activity == 0; % | activity > 4;
 comIdx = comIdx(:);
 if max(comIdx) == 0
-    comErrors = 'No com. errors detected';
+    comErrors = {'No com. errors detected'};
 else
     % Find start and end times of error clusters
     comIdxPlus1 = circshift(comIdx,1);
@@ -49,17 +49,11 @@ else
     endTimes = time(endsIdx);
     % Find the number of error clusters
     nComErr = min([length(startTimes),length(endTimes)]);
-    % Create string summary to return
-    comErrors0 = [num2str(nComErr),' communication errors at approx. '];
-    l1 = length(comErrors0);
-    l2 = length([', ',dateFormat,' - ',dateFormat]);
-    % Preallocate the string
-    comErrors = char(zeros(1,l1+l2*nComErr));
-    comErrors(1:l1) = comErrors0;
+    % Create summary
+    comErrors = cell(nComErr+1,1);
+    comErrors{1} = [num2str(nComErr),' communication errors at approximately:'];
     for i1 = 1:nComErr
-        j1 = l1 + 1 + l2 * (i1 - 1);
-        j2 = j1 + l2 - 1;
-        comErrors(j1:j2) = [', ',datestr(startTimes(i1),dateFormat),' - ',...
+        comErrors{i1+1} = [datestr(startTimes(i1),dateFormat),' - ',...
             datestr(endTimes(i1),dateFormat)];
     end
 end
@@ -67,20 +61,15 @@ end
 %% Summarize resets
 resets = resets(:);
 if max(resets) == 0
-    resetErrors = 'No resets detected';
+    resetErrors = {'No resets detected'};
 else
     nResetErr = sum(resets);
     resetTimes = time(resets);
-    resetErrors0 = [num2str(nResetErr),' reset errors at approx. '];
-    l3 = length(resetErrors0);
-    l4 = length([', ',dateFormat]);
-    % Preallocate the string
-    resetErrors = char(zeros(1,l3+l4*nResetErr));
-    resetErrors(1:l3) = resetErrors0;
+    % Create summary
+    resetErrors = cell(nResetErr+1,1);
+    resetErrors{1} = [num2str(nResetErr),' reset errors at approximately:'];
     for i2 = 1:nResetErr
-        j3 = l3 + 1 + l4 * (i1 - 1);
-        j4 = j3 + l4 - 1;
-        resetErrors(j3:j4) = [', ',datestr(resetTimes(i1),dateFormat)];
+        resetErrors{i2+1} = datestr(resetTimes(i2),dateFormat);
     end
 end
 
