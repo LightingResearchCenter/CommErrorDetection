@@ -32,22 +32,47 @@ for i2 = 1:nFiles
         filePath2 = fullfile(dirName, dirInfo(idx3,1).name);
 
         [deviceID,comErrors,resetErrors] = checkFile(filePath1,filePath2);
-        fprintf(fid,'%s\r\n\tDevice ID: %s\r\n',dirInfo(i2,1).name,deviceID);
-        if length(comErrors) == 1
-            fprintf(fid,'\t%s\r\n',comErrors{1});
+        nComErrors = length(comErrors);
+        nResetErrors = length(resetErrors);
+        comErrorsHead = [num2str(nComErrors),' errors'];
+        resetErrorsHead = [num2str(length(resetErrors)),' resets'];
+        spacer1 = repmat(' ',1,length(dirInfo(i2,1).name));
+        spacer2 = repmat(' ',1,length(['SN: ',deviceID]));
+        if ~isempty(comErrors)
+            spacer3 = repmat(' ',1,max([length(comErrorsHead),length(comErrors{1})]));
+            if length(comErrors{1}) > length(comErrorsHead)
+                spacer5 = repmat(' ',1,length(comErrors{1})-length(comErrorsHead));
+            else
+                spacer5 = '';
+                spacer6 = repmat(' ',1,length(comErrorsHead)-length(comErrors{1}));
+            end
         else
-            fprintf(fid,'\t%s\r\n',comErrors{1});
-            for j1 = 2:length(comErrors)
-                fprintf(fid,'\t\t%s\r\n',comErrors{j1});
+            spacer3 = repmat(' ',1,length(comErrorsHead));
+            spacer5 = '';
+            spacer6 = '';
+        end
+        if ~isempty(resetErrors)
+            spacer4 = repmat(' ',1,max([length(resetErrorsHead),length(resetErrors{1})]));
+        else
+            spacer4 = repmat(' ',1,length(resetErrorsHead));
+        end
+        
+        fprintf(fid,'%s\tSN: %s\t%s%s\t%s\r\n',dirInfo(i2,1).name,deviceID,comErrorsHead,spacer5,resetErrorsHead);
+        
+        for j1 = 1:max([nComErrors,nResetErrors])
+            if j1 <= nComErrors
+                fprintf(fid,'%s\t%s\t%s%s\t',spacer1,spacer2,comErrors{j1},spacer6);
+            else
+                fprintf(fid,'%s\t%s\t%s\t',spacer1,spacer2,spacer3);
+            end
+            if j1 <= nResetErrors
+                fprintf(fid,'%s\r\n',resetErrors{j1});
+            else
+                fprintf(fid,'%s\r\n',spacer4);
             end
         end
-        if length(resetErrors) == 1
-            fprintf(fid,'\t%s\r\n',resetErrors{1});
-        else
-            fprintf(fid,'\t%s\r\n',resetErrors{1});
-            for j2 = 2:length(resetErrors)
-                fprintf(fid,'\t\t%s\r\n',resetErrors{j2});
-            end
+        for j2 = 1:length(resetErrors)
+            
         end
     end
 end

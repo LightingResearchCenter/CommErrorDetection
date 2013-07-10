@@ -17,11 +17,10 @@ day = (header(13) - 48)*10 + (header(14) - 48);
 year = (header(16) - 48)*10 + (header(17) - 48);
 hour = (header(19) - 48)*10 + (header(20) - 48);
 minute = (header(22) - 48)*10 + (header(23) - 48);
-period = (header(26) - 48)*100 + (header(27) - 48)*10 + (header(28) - 48);
+logInterval = (header(26) - 48)*100 + (header(27) - 48)*10 + (header(28) - 48);
 startTime = datenum(year,month,day,hour,minute,0);
 j = 1;
 for i = 1:8:length(data)
-    time(j) = startTime + (period/86400)*(i/8 - 3);
     A(j) = (256*data(i + 6) + data(i + 7));
     R(j) = 256*data(j) + data(j + 1);
     G(j) = 256*data(j + 2) + data(j + 3);
@@ -33,7 +32,6 @@ end
 
 % remove unwritten (value = 65535)
 unwritten = R == 65535;
-time(unwritten) = [];
 R(unwritten) = [];
 G(unwritten) = [];
 B(unwritten) = [];
@@ -42,18 +40,20 @@ A(unwritten) = [];
 % consolidate resets and remove extra (value = 65278)
 resets0 = R == 65278;
 resets = circshift(resets0(:),-1);
-time(resets0) = [];
 R(resets0) = [];
 G(resets0) = [];
 B(resets0) = [];
 A(resets0) = [];
 resets(resets0) = [];
 
+% create a time array
+time = (1:length(R))/(1/logInterval*60*60*24)+startTime;
+
 % convert activity to rms g
 % raw activity is a mean squared value, 1 count = .0039 g's, and the 4 comes
 % from four right shifts in the source code
 activity = (sqrt(A))*.0039*4;
 
-activity = filter5min(activity,period);
+activity = filter5min(activity,logInterval);
 
 end
