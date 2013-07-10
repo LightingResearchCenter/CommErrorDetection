@@ -1,4 +1,4 @@
-function [deviceID, time, activity, resets] = readRawUint16(dataPath)
+function [deviceID, time, R, G, B, activity, resets] = readRawUint16(dataPath)
 % READRAWUINT16 processes Daysimeter files that have been downloaded directly
 
 infoPath = regexprep(dataPath,'data_log','log_info');
@@ -40,17 +40,21 @@ end
 % remove unwritten (value = 65535)
 unwritten = R == 65535;
 R(unwritten) = [];
+G(unwritten) = [];
+B(unwritten) = [];
 A(unwritten) = [];
 
 % consolidate resets and remove extra (value = 65278)
 resets0 = R == 65278;
 resets = circshift(resets0(:),-1);
 R(resets0) = [];
+G(resets0) = [];
+B(resets0) = [];
 A(resets0) = [];
 resets(resets0) = [];
 
 % create a time array
-time = (1:length(A))/(1/logInterval*60*60*24)+startTime;
+time = (1:length(R))/(1/logInterval*60*60*24)+startTime;
 
 % convert activity to rms g
 % raw activity is a mean squared value, 1 count = .0039 g's, and the 4 comes

@@ -1,4 +1,4 @@
-function [deviceID, time, activity, resets] = readRawAsciiByte(dataPath)
+function [deviceID, time, R, G, B, activity, resets] = readRawAsciiByte(dataPath)
 % READRAWUINT16 processes Daysimeter files that have been downloaded as
 % ASCII byte format
 
@@ -33,11 +33,19 @@ end
 
 % remove unwritten (value = 65535)
 unwritten = R == 65535;
+time(unwritten) = [];
+R(unwritten) = [];
+G(unwritten) = [];
+B(unwritten) = [];
 A(unwritten) = [];
 
 % consolidate resets and remove extra (value = 65278)
 resets0 = R == 65278;
 resets = circshift(resets0(:),-1);
+time(resets0) = [];
+R(resets0) = [];
+G(resets0) = [];
+B(resets0) = [];
 A(resets0) = [];
 resets(resets0) = [];
 

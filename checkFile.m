@@ -1,14 +1,15 @@
-function [ deviceID, comErrors, resetErrors ] = checkFile( filePath )
+function [ deviceID, comErrors, resetErrors ] = checkFile( filePath1, filePath2 )
 %CHECKFILE checks a Daysimeter file for communication errors and resets
 %   Returns the device ID and a summary of communication errors and resets
 
 %% Read file
 % Determine type of raw file
-rawType = rawTest(filePath);
+rawType = rawTest(filePath1);
 % Process raw file based on type
 if rawType == 1 % bitwise text file
     try
-        [deviceID, time, activity, resets] = readRawAsciiByte(filePath);
+        [deviceID, time1, R1, G1, B1, A1, resets] = readRawAsciiByte(filePath1);
+        [~       , time2, R2, G2, B2, A2, ~     ] = readRawAsciiByte(filePath2);
     catch err
         deviceID = 'File skipped';
         comErrors = {''};
@@ -17,7 +18,8 @@ if rawType == 1 % bitwise text file
     end
 elseif rawType == 2 % uint16 binary with separate header file
     try
-        [deviceID, time, activity, resets] = readRawUint16(filePath);
+        [deviceID, time1, R1, G1, B1, A1, resets] = readRawUint16(filePath1);
+        [~       , time2, R2, G2, B2, A2, ~     ] = readRawUint16(filePath2);
     catch err
         deviceID = 'File skipped';
         comErrors = {''};
@@ -31,12 +33,26 @@ else
     return;
 end
 
+%% Shorten the data to the same length
+idx = 1:min(length(time1),length(time2));
+time1 = time1(idx);
+R1 = R1(idx);
+G1 = G1(idx);
+B1 = B1(idx);
+A1 = A1(idx);
+resets = resets(idx);
+time2 = time2(idx);
+R2 = R2(idx);
+G2 = G2(idx);
+B2 = B2(idx);
+A2 = A2(idx);
+
 %% Set date formatting
 dateFormat = 'mm/dd/yy HH:MM';
 
 %% Summarize communication errors
 % Find communication errors
-comIdx = activity == 0; % | activity > 4;
+comIdx = R1~=R2 | G1~=G2 |  B1~=B2 | A1~=A2;
 comIdx = comIdx(:);
 if max(comIdx) == 0
     comErrors = {'No com. errors detected'};
@@ -45,8 +61,8 @@ else
     comIdxPlus1 = circshift(comIdx,1);
     startsIdx = comIdx == 1 & comIdxPlus1 == 0;
     endsIdx = comIdx == 0 & comIdxPlus1 == 1;
-    startTimes = time(startsIdx);
-    endTimes = time(endsIdx);
+    startTimes = time1(startsIdx);
+    endTimes = time1(endsIdx);
     % Find the number of error clusters
     nComErr = min([length(startTimes),length(endTimes)]);
     % Create summary
@@ -64,7 +80,7 @@ if max(resets) == 0
     resetErrors = {'No resets detected'};
 else
     nResetErr = sum(resets);
-    resetTimes = time(resets);
+    resetTimes = time1(resets);
     % Create summary
     resetErrors = cell(nResetErr+1,1);
     resetErrors{1} = [num2str(nResetErr),' reset errors at approximately:'];
