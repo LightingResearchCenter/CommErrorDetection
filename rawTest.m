@@ -5,9 +5,9 @@ function [ rawType ] = rawTest( filePath )
 
 if strcmpi(fileExt,'.raw')
     rawType = 1; % bitwise text
-elseif strcmpi(fileExt,'.txt') && strcmpi(regexprep(fileName,'.*header.*','header','ignorecase'),'header')
+elseif strcmpi(fileExt,'.bin') && strcmpi(regexprep(fileName,'.*header.*','header','ignorecase'),'header')
     rawType = 0; % text header file
-elseif strcmpi(fileExt,'.txt')
+elseif strcmpi(fileExt,'.bin')
     rawType = 2; % uint16 binary
 else
     rawType = 0; % Invalid

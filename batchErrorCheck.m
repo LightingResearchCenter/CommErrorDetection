@@ -3,7 +3,7 @@ function batchErrorCheck
 %   Detailed explanation goes here
 
 dirName = uigetdir;
-dirInfo1 = dir(fullfile(dirName,'*data_log.txt'));
+dirInfo1 = dir(fullfile(dirName,'*data.bin'));
 dirInfo2 = dir(fullfile(dirName,'*.raw'));
 dirInfo = [dirInfo1;dirInfo2];
 saveFile = fullfile(dirName,'error_log.txt');
@@ -16,8 +16,7 @@ for i1 = 1:nFiles
     fileNames{i1} = dirInfo(i1,1).name;
 end
 
-fileID = regexprep(fileNames,'Day(\d{2})_(\d{6})_(\d{4})\..+','0$1$2$3');
-fileID = regexprep(fileID,'Day(\d{3})_(\d{6})_(\d{4})\..+','$1$2$3');
+fileID = regexprep(fileNames,'\D*(\d*)_(\d*)_(\d*)\D*','$1$2$3');
 fileNum = str2double(fileID);
 fileDevice = str2double(regexprep(fileNames,'Day(\d+)_.*','$1'));
 
@@ -42,6 +41,7 @@ for i2 = 1:nFiles
             spacer3 = repmat(' ',1,max([length(comErrorsHead),length(comErrors{1})]));
             if length(comErrors{1}) > length(comErrorsHead)
                 spacer5 = repmat(' ',1,length(comErrors{1})-length(comErrorsHead));
+                spacer6 = '';
             else
                 spacer5 = '';
                 spacer6 = repmat(' ',1,length(comErrorsHead)-length(comErrors{1}));
